@@ -94,13 +94,16 @@ export class ViewBillComponent implements OnInit {
     }, (error:any) => { 
       this.ngxService.stop();
       console.log(error);
-      if (error.error?.message) {
-        this.responseMessage = error.error?.message;
-      } else {
-        this.responseMessage = GlobalConstants.genericError;
-      }
-      this.snackBarService.openSnackBar(this.responseMessage, GlobalConstants.error);
+      // if (error.error?.message) {
+      //   this.responseMessage = error.error?.message;
+      // } else {
+      //   this.responseMessage = GlobalConstants.genericError;
+      // }
+      // this.snackBarService.openSnackBar(this.responseMessage, GlobalConstants.error);
     })
+    this.ngxService.stop();
+    this.tableData();
+    this.snackBarService.openSnackBar("Bill deleted successfully..", "success");
   }
 
   downloadReportAction(values:any){

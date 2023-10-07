@@ -55,7 +55,7 @@ const ngxUILoaderConfig : NgxUiLoaderConfig={
     SharedModule,
     MatDialogModule,
     NgxUiLoaderModule.forRoot(ngxUILoaderConfig),
-    HttpClientModule
+    HttpClientModule,
   ],
   providers: [HttpClientModule,{provide:HTTP_INTERCEPTORS, useClass:TokenInterceptorInterceptor, multi:true}],
   bootstrap: [AppComponent]

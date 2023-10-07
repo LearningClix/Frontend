@@ -8,6 +8,8 @@ import { CategoryService } from 'src/app/shared/services/category.service';
 import { SnackbarService } from 'src/app/shared/services/snackbar.service';
 import { CategoryComponent } from '../dialog/category/category.component';
 import { ConfirmationComponent } from '../dialog/confirmation/confirmation.component';
+import { UserService } from 'src/app/shared/services/user.service';
+import jwt_decode from 'jwt-decode';
 
 @Component({
   selector: 'app-manage-category',
@@ -18,14 +20,23 @@ export class ManageCategoryComponent implements OnInit {
   displayedColumns: string[] = ['name', 'edit'];
   ds: any;
   responseMessage: any;
+  role: string = '';
+  token: string = '';
+  decodedToken: any;
   constructor(private categoryService: CategoryService,
     public dialog: MatDialog,
+    public userService: UserService,
     private ngxService: NgxUiLoaderService,
     private snackBarService: SnackbarService,
     private router: Router,
   ) { }
 
   ngOnInit(): void {
+    console.log("local storage email : ", localStorage.getItem("token"));
+    this.token = localStorage.getItem("token") || '{}';
+    this.decodedToken = jwt_decode(this.token);
+    this.role = this.decodedToken.role;
+    console.log("User Role: ", this.role);
     this.ngxService.start();
     this.tableData();
   }
@@ -92,18 +103,22 @@ export class ManageCategoryComponent implements OnInit {
   }
 
   handleDeleteAction(values: any) {
-    const dialogConfig = new MatDialogConfig();
-    dialogConfig.data = {
-      message: "delete " + values.name + " Category",
-      confirmation: true,
-    };
-    const dialogRef = this.dialog.open(ConfirmationComponent, dialogConfig);
-    const sub = dialogRef.componentInstance.onEmitStatusChange.subscribe((res) => {
-      this.ngxService.start();
-      console.log("this.deleteCategory(values.id); : ", values.id)
-      this.deleteProduct(values.id);
-      dialogRef.close();
-    })
+    if (this.role === 'admin') {
+      const dialogConfig = new MatDialogConfig();
+      dialogConfig.data = {
+        message: "delete " + values.name + " Category",
+        confirmation: true,
+      };
+      const dialogRef = this.dialog.open(ConfirmationComponent, dialogConfig);
+      const sub = dialogRef.componentInstance.onEmitStatusChange.subscribe((res) => {
+        this.ngxService.start();
+        console.log("this.deleteCategory(values.id); : ", values.id)
+        this.deleteProduct(values.id);
+        dialogRef.close();
+      })
+    } else {
+      this.snackBarService.openSnackBar("you are not Authorized..", GlobalConstants.error);
+    }
   }
 
   deleteProduct(id: any) {
@@ -124,26 +139,30 @@ export class ManageCategoryComponent implements OnInit {
     })
   }
 
-
   onChange(status: any, id: any) {
-    this.ngxService.start();
-    var data = {
-      status: status,
-      id: id,
-    }
-    this.categoryService.updateCategoryStatus(data).subscribe((res: any) => {
-      this.ngxService.stop();
-      this.responseMessage = res?.message;
-      this.snackBarService.openSnackBar(this.responseMessage, 'success');
-    }, (error: any) => {
-      this.ngxService.stop();
-      console.log(error);
-      if (error.error?.message) {
-        this.responseMessage = error.error?.message;
-      } else {
-        this.responseMessage = GlobalConstants.genericError;
+    if (this.role === 'admin') {
+      this.ngxService.start();
+      var data = {
+        status: status,
+        id: id,
       }
-      this.snackBarService.openSnackBar(this.responseMessage, GlobalConstants.error);
-    })
+      this.categoryService.updateCategoryStatus(data).subscribe((res: any) => {
+        this.ngxService.stop();
+        this.responseMessage = res?.message;
+        this.snackBarService.openSnackBar(this.responseMessage, 'success');
+      }, (error: any) => {
+        this.ngxService.stop();
+        console.log(error);
+        if (error.error?.message) {
+          this.responseMessage = error.error?.message;
+        } else {
+          this.responseMessage = GlobalConstants.genericError;
+        }
+        this.snackBarService.openSnackBar(this.responseMessage, GlobalConstants.error);
+      })
+
+    } else {
+      this.snackBarService.openSnackBar("you are not Authorized..", GlobalConstants.error);
+    }
   }
 }

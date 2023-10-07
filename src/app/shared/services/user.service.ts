@@ -54,5 +54,8 @@ export class UserService {
     });
   }
 
+  getUserRole(data: any) {
+    return this.http.get(this.apiModel.host + '/api/user/getUserRole',data);
+  }
   
 }
